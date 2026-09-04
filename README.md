@@ -2,7 +2,7 @@
 
 新加坡国立大学人工智能系统硕士在读。做 AI 应用工程与全栈开发——把大模型的能力用工程手段围起来，做成真的能跑在线上、有人用、成本可控的产品。
 
-**联系方式** ｜ 邮箱 e1554229@u.nus.edu ｜ GitHub [@SereneTang02](https://github.com/SereneTang02)
+**联系方式** ｜ 邮箱 e1554229@u.nus.edu ｜ GitHub [@SereneTang02](https://github.com/SereneTang02) ｜ [English](README.en.md)
 
 ![GitHub 贡献记录](images/gh-profile.jpg)
 
@@ -30,7 +30,7 @@
 
 微信小程序后台：截至 2026 年 9 月，累计服务 **668** 名真实用户，自上线起自然增长，未做任何投放。
 
-![微信小程序后台](images/wyjn-console.jpg)
+<img src="images/wyjn-console.jpg" alt="微信小程序后台" style="zoom:33%;" />
 
 ### ② 词库与学习模块
 
