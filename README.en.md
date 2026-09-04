@@ -4,7 +4,7 @@ MTech in Artificial Intelligence Systems candidate at the National University of
 
 **Contact** ｜ e1554229@u.nus.edu ｜ GitHub [@SereneTang02](https://github.com/SereneTang02)
 
-### 🌐 [切换到中文版 →](README.md)
+### 🌐 [中文](README.md)  [English](README.en.md)
 
 ![GitHub contribution record](images/gh-profile.jpg)
 
