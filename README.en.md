@@ -2,7 +2,9 @@
 
 MTech in Artificial Intelligence Systems candidate at the National University of Singapore. I work on AI application engineering and full-stack development — putting engineering guardrails around what a large model can do, so it ships as a product that actually runs in production, has real users, and stays affordable.
 
-**Contact** ｜ e1554229@u.nus.edu ｜ GitHub [@SereneTang02](https://github.com/SereneTang02) ｜ [中文版](README.md)
+**Contact** ｜ e1554229@u.nus.edu ｜ GitHub [@SereneTang02](https://github.com/SereneTang02)
+
+### 🌐 [切换到中文版 →](README.md)
 
 ![GitHub contribution record](images/gh-profile.jpg)
 

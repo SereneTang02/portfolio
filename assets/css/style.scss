@@ -54,3 +54,25 @@ body, .main-content {
   .main-content { font-size: 1rem; }
   .main-content table { font-size: 0.85rem; }
 }
+
+/* ---- 语言切换：页首醒目按钮 ---- */
+.main-content h3:has(> a[href$="README.en.html"]),
+.main-content h3:has(> a[href$="README.html"]) {
+  margin: 1.4rem 0;
+  font-size: 1.05rem;
+}
+.main-content h3 > a[href$="README.en.html"],
+.main-content h3 > a[href$="README.html"] {
+  display: inline-block;
+  padding: 0.55rem 1.2rem;
+  background: #1e6bb8;
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+}
+.main-content h3 > a[href$="README.en.html"]:hover,
+.main-content h3 > a[href$="README.html"]:hover {
+  background: #17538f;
+  text-decoration: none;
+}
