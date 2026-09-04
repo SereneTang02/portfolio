@@ -4,7 +4,7 @@
 
 **联系方式** ｜ 邮箱 e1554229@u.nus.edu ｜ GitHub [@SereneTang02](https://github.com/SereneTang02)
 
-### 🌐 [中文](README.md)  [English](README.en.md)
+### 🌐 [English](README.en.md)
 
 ![GitHub 贡献记录](images/gh-profile.jpg)
 
