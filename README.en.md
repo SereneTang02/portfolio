@@ -15,8 +15,9 @@ MTech in Artificial Intelligence Systems candidate at the National University of
 | Project | Role | Keywords | Try it |
 |---|---|---|---|
 | [**WenYan Jinnang**](#1-wenyan-jinnang--an-ai-driven-classical-chinese-vocabulary-mini-program) | Solo build, live in production | Spring Boot · GLM · SSE streaming · three-tier cost control · CI/CD auto-deploy | **Search "文言锦囊" in WeChat**, 668 cumulative users |
-| [**Lumie**](#2-lumie--a-live2d-ai-companion-app) | AI engineering & mobile, 2-person team | Knowledge-graph memory · graph-augmented retrieval · prompt governance & evaluation · Live2D | **[lumie.love](https://lumie.love)** |
-| [**Seamless**](#3-seamless--a-cloud-edge-road-crack-detection-system) | Team lead & algorithm developer | YOLO architecture customisation · cloud-edge split · on-vehicle inference | First-author conference paper · covered by 32 media outlets |
+| [**Weave**](#2-weave--an-ai-travel-guide-consolidation-app) | Solo project | Multimodal screenshot extraction · four-layer consolidation · anti-hallucination constraints · model switching | 48 unit tests, all passing |
+| [**TIMO**](#3-timo--a-showcase-platform-for-a-medical-deep-research-agent) | Group lead (4 people) | Event protocol · SSE live / offline replay · 1,034-question trajectory pipeline | Showcase for Tsinghua AIR's medical agent |
+| [**Seamless**](#4-seamless--a-cloud-edge-road-crack-detection-system) | Team lead & algorithm developer | YOLO architecture customisation · cloud-edge split · on-vehicle inference | First-author conference paper · covered by 32 media outlets |
 
 ---
 
@@ -98,56 +99,67 @@ This is the part I most want to show.
 
 ---
 
-## 2. Lumie — a Live2D AI companion app
+## 2. Weave — an AI travel-guide consolidation app
 
-**Apr 2026 – present ｜ AI engineering & mobile development, 2-person team**
+**Sep 2026 – present | Solo project, designed and built independently (AI-assisted coding)**
 
-> **Try it at [lumie.love](https://lumie.love).**
+Weave is for independent travellers who screenshot dozens of guides on Xiaohongshu and Dianping, then can't use them on the ground. You drop the screenshots into a trip; a multimodal model reads out the suggestions; a four-layer consolidation engine de-duplicates them, normalises place names and surfaces conflicts; and the result is attached to an AI-generated itinerary skeleton that keeps improving as you feed it. The guiding idea: consolidation matters more than generation. Built with TypeScript + Expo / React Native (one codebase for iOS and web), Expo API Routes on the server, and a model layer that switches between Claude and Qwen.
 
-A mobile AI product for the emotional-companionship market: a Live2D avatar whose expressions track the conversation in real time, end-to-end realtime voice through Volcengine, and a long-term memory system that sustains a continuous relationship across days and topics. Built on a decoupled dual-repository architecture (mobile: Vue 3 + Vite + Capacitor + Live2D; server: Hono + Postgres + Neo4j + admin console), with the team collaborating through a multi-branch PR workflow.
+![Weave screens: trips, to-do, itinerary, inbox](images/weave-screens.jpg)
 
-### ① The Live2D character and conversation
+### ① A four-layer consolidation engine
 
-Appearance, expression and lip-sync follow the emotion of the conversation in real time, with multiple characters and scene backgrounds. I own the last mile from model output to interface — stripping internal control markers out of replies, mapping emotion words onto the avatar's live expressions, and rendering answers word by word as they stream.
+Every layer is a pure function — same input, same output:
 
-![Live2D conversation](images/lumie-chat.jpg)
+- **L0 duplicates**: byte fingerprints catch identical screenshots; text similarity ≥ 0.9 catches the same post captured twice
+- **L1 place names**: "better to miss a merge than make a wrong one" — exact/alias, similarity ≥ 0.9, and a 0.7–0.9 band the user confirms; chains are split into brand + branch so two branches never collapse into one
+- **L2 semantic de-dup**: text recall, auto-merge above 0.85, an LLM judge for the grey zone, and a fallback to text similarity when the model is unavailable
+- **L3 conflicts**: first check whether two tips apply under mutually exclusive conditions (six dimensions: time of day, season, companions, transport and more), then give a weighted, explainable leaning (condition fit, number of sources, recency, specificity, with a penalty for likely ads)
 
-### ② Long-term memory: a knowledge graph with graph-augmented retrieval
+### ② Stopping hallucination at the source
 
-Pure vector retrieval cannot reach three things: multi-hop association ("that friend of hers who's always working late"), contradiction resolution (loved cats three months ago, scratched and afraid of them last week), and temporal anchoring ("a year ago today you'd just defended your thesis"). I designed and built the Neo4j-backed memory graph and its retrieval pipeline:
+Invented opening hours and ticket prices are the worst failure in a travel app, so the model may only quote, not improvise:
 
-- **Extraction** — a regex pre-classifier first decides whether a turn is worth extracting at all; on a hit, an LLM structured-extraction step distils open-domain conversation into person / event / preference / emotion triples, merged idempotently into the graph
-- **Storage** — the vector index is built directly on the graph nodes, so embeddings and relationships share one store and cannot drift apart
-- **Retrieval** — entities are extracted from the incoming turn, then recall runs down two parallel paths, multi-hop graph neighbourhood and vector similarity, fused by a ranking over similarity, importance, time decay and hop distance before assembly into the memory injection block
-- **Contradiction resolution** — when a new fact conflicts with an old one, a `SUPERSEDES` edge is created rather than an overwrite: the current answer uses the latest state, but "you used to love cats" stays in the graph as relationship depth
+- every extracted tip must carry its source text; if under 80% of that source appears in the screenshot's text, the tip is dropped, and numbers may only come from the source
+- the itinerary schema simply has no fields for exact times, restaurants or prices, and deterministic rules catch anything that leaks into free text
+- a vendor-neutral LLM layer runs Claude and Qwen through the same loop: structured output → zod validation plus rule checks → feed the failure reasons back and retry, with code-level repairs for small issues to save a call
 
-### ③ Making memory legible
+### ③ Engineering
 
-I led the product rework of the memory module: what the backend stores as scattered rows was reorganised along a *how you see her / how she sees you* split into a four-part narrative, so the user opens a growing relationship rather than a database listing.
+- Domain logic is decoupled from the UI (about 4,700 lines of pure TypeScript) and covered by **48 vitest unit tests**, all passing
+- Steps 0–5 of the roadmap shipped in five weeks — about 17,000 lines of TypeScript plus four design documents (about 1,300 lines) recording the thresholds and trade-offs
 
-![Memory page](images/lumie-memory.jpg)
-
-### ④ Prompt governance and offline evaluation
-
-I consolidated the product's entire LLM prompting layer — strings hard-coded across 12+ backend services — into a database-backed registry of **21 typed slots** (persona, dialogue style, streaming and JSON output contracts, memory extraction and injection, Cypher generation, proactive openers, realtime-voice style), each editable live from the admin console, with variable interpolation, per-slot declared variables, and a shipped-in-code default that every slot degrades to. A broken or emptied edit falls back to the original prompt instead of injecting a blank system message. Prompt iteration went from a code change plus redeploy down to a console edit.
-
-![Editing prompts from the admin console](images/lumie-prompts.jpg)
-
-On top of that I built a ~750-line **offline evaluation harness** that turns prompt writing from taste into comparison. One script generates several stylistic candidates per slot; the other fills each candidate from a shared fixture library of realistic inputs and **actually runs it**, in two modes — *generative*, where the filled prompt is the request and the model's output is the artefact, and *behavioural*, where the candidate is injected as the system prompt and then probed with scripted user turns (a pushback, a distress message, a memory-worthy aside). Each slot carries its own temperature and token budget, the live production prompt is run on the identical input as a control, and everything lands in one side-by-side report that decides what ships.
-
-### ⑤ Emotional features and progression
-
-Mood logging, relationship milestones, a store and a wallet — the pieces that give companionship a sense of growth.
-
-![Mood, milestones and store](images/lumie-features.jpg)
-
-![Lumie repository contributions and PRs](images/lumie-contributions.jpg)
-
-> **In short**: Lumie stands for a different capability — delivering continuously inside a real team codebase spanning multiple repositories and a multi-branch PR workflow. Cross-repository interface contracts, keeping mobile and server consistent, closing the loop on prompt iteration: none of these problems exist in a one-person, one-repository project.
+> **In short**: Weave is less about making the model say more and more about making every sentence traceable to a source.
 
 ---
 
-## 3. Seamless — a cloud-edge road crack detection system
+## 3. TIMO — a showcase platform for a medical deep-research agent
+
+**Oct 2026 | Lead of a four-person group | Front end and data pipeline**
+
+TIMO is a medical search agent developed by a research team at Tsinghua AIR (the model and paper are theirs). Given a medical question, it loops through think → search → read → think again and answers with evidence. Our group built the platform that makes this process visible — step-by-step replay and live streaming — for an academic talk at the Beihai forum and the model's open-source release. It went from kickoff to delivery in one week.
+
+![TIMO live research view: conversation, research process, source library](images/timo-live.png)
+
+### ① One event protocol, two data sources
+
+Replay (offline trajectories) and live mode (SSE) would normally need two UIs. I designed a shared event-stream protocol, documented it (377 lines) and set compatibility rules: add fields, never rename; bump the schema version for breaking changes. Both modes then ran on the same React front end without UI changes, and a teammate could build the live back end in parallel.
+
+### ② Trajectory pipeline
+
+A Python pipeline converts raw agent trajectories for **1,034 medical benchmark questions across six benchmarks** into front-end events. Along the way I found that when the model opened several pages at once they were being treated as a single URL (2,417 calls affected) and fixed it. I also used the NCBI and OpenAlex APIs to fill in journal, citation count and DOI for cited papers, rate-limited to 10 requests per second.
+
+### ③ Replay engine and source library
+
+![Source library: papers collected and read during research](images/timo-library.jpg)
+
+I built the replay engine (1–8× speed, jump by round, typewriter effect, compact and real-time pacing, shortcuts and deep links), a searchable source-library modal linked from the research steps, and a bilingual Chinese/English UI. During integration I traced a failure in English mode to the model's safety filter misclassifying medical drug content, where a single failed translation took down the whole page.
+
+> **In short**: as group lead I merged 17 PRs in two days, wrote about 4,500 lines myself, and generated the presentation video programmatically with Remotion.
+
+---
+
+## 4. Seamless — a cloud-edge road crack detection system
 
 **May 2023 – Jun 2025 ｜ team lead & algorithm developer ｜ founder, Yunfan Tech Team at Chongqing University**
 National Natural Science Foundation of China project ｜ Chongqing Undergraduate Innovation Training Programme, awarded distinction on completion
