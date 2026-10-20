@@ -136,9 +136,9 @@ Invented opening hours and ticket prices are the worst failure in a travel app, 
 
 ## 3. TIMO — a showcase platform for a medical deep-research agent
 
-**Oct 2026 | TIMO project team, Institute for AI Industry Research (AIR), Tsinghua University | Engineering lead**
+**TIMO project team, Institute for AI Industry Research (AIR), Tsinghua University | Engineering lead | Ongoing involvement**
 
-TIMO (TIMO-OSS-Search-Preview) is the Tsinghua AIR team's open, lightweight model for medical deep research, released in 4B and 27B sizes for private deployment. On 1,034 hard questions from six medical benchmarks, the 27B model scores 48.5% overall and the 4B model 40.4%. Given a medical question, the model loops through think → search → read → think again and answers with evidence. The team has an algorithm group, which trained the model and wrote the paper, and an engineering group, which I lead. My group built the platform that makes this process visible — step-by-step replay and live streaming — for an academic talk at the Beihai forum and the model's open-source release. It went from kickoff to delivery in one week.
+TIMO (TIMO-OSS-Search-Preview) is the Tsinghua AIR team's open, lightweight model for medical deep research, released in 4B and 27B sizes for private deployment. On 1,034 hard questions from six medical benchmarks, the 27B model scores 48.5% overall and the 4B model 40.4%. Given a medical question, the model loops through think → search → read → think again and answers with evidence. The team has an algorithm group, which trained the model and wrote the paper, and an engineering group, which I lead. My group built the platform that makes this process visible — step-by-step replay and live streaming — for the academic talk at the Beihai forum, the model's open-source release and later public demos.
 
 ![TIMO live research view: conversation, research process, source library](images/timo-live.png)
 
@@ -156,7 +156,7 @@ A Python pipeline converts raw agent trajectories for **1,034 medical benchmark 
 
 I built the replay engine (1–8× speed, jump by round, typewriter effect, compact and real-time pacing, shortcuts and deep links), a searchable source-library modal linked from the research steps, and a bilingual Chinese/English UI. During integration I traced a failure in English mode to the model's safety filter misclassifying medical drug content, where a single failed translation took down the whole page.
 
-> **In short**: as engineering lead I merged 17 PRs in two days, wrote about 4,500 lines myself, and generated the presentation video programmatically with Remotion.
+> **In short**: as engineering lead I set the interfaces, split the work and reviewed code, merged 17 PRs, wrote about 4,500 lines myself, and generated the presentation video programmatically with Remotion. Doing engineering inside a research team means keeping pace with the model: every new model or harness version has to drop straight into the showcase.
 
 ---
 
