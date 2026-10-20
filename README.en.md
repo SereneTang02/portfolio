@@ -175,10 +175,7 @@ I lead the engineering group — architecture, task split, code review and liais
 
 ### ③ Results
 
-- **Accuracy**: on 1,034 hard questions from six medical benchmarks, TIMO (27B) scores **48.5%** overall, ahead of closed-book Claude-Opus-5 (42.9%); TIMO (4B) scores **40.4%**, ahead of closed-book GPT-6-astra (36.1%), and both lead comparable open medical models
-- **Co-evolution**: iterating the harness together with the model added 4.55 percentage points overall
-- **Data**: about 3,500 high-quality training trajectories selected from more than 220,000 candidate questions
-- **Release**: presented as an oral talk and poster at the Beihai forum; the 4B and 27B models are open-sourced on GitHub and Hugging Face, with the engineering group's platform used for the live demo and release
+Reached 48.5% (27B) and 40.4% (4B) overall accuracy on 1,034 hard questions from six medical benchmarks, ahead of closed-book Claude-Opus-5 (42.9%) and GPT-6-astra (36.1%) respectively and of comparable open medical models; gained 4.55 percentage points over the first version by co-evolving the harness with the model; selected about 3,500 high-quality training trajectories from more than 220,000 candidate questions; presented the work as an oral talk and poster at the Beihai forum, open-sourced the 4B and 27B models on GitHub and Hugging Face, and delivered the showcase platform for the live demo and release.
 
 > Model training and the paper are the algorithm group's work, and the accuracy figures are team results. This page shows interface screenshots only — no code or benchmark questions.
 
