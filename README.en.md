@@ -15,8 +15,8 @@ MTech in Artificial Intelligence Systems candidate at the National University of
 | Project | Role | Keywords | Try it |
 |---|---|---|---|
 | [**WenYan Jinnang**](#1-wenyan-jinnang--an-ai-driven-classical-chinese-vocabulary-mini-program) | Solo build, live in production | Spring Boot · GLM · SSE streaming · three-tier cost control · CI/CD auto-deploy | **Search "文言锦囊" in WeChat**, 668 cumulative users |
-| [**Weave**](#2-weave--an-ai-travel-guide-consolidation-app) | Solo project | Multimodal screenshot extraction · four-layer consolidation · anti-hallucination constraints · model switching | 48 unit tests, all passing |
-| [**TIMO**](#3-timo--a-showcase-platform-for-a-medical-deep-research-agent) | Engineering lead, Tsinghua AIR TIMO team | Event protocol · SSE live / offline replay · 1,034-question trajectory pipeline | Showcase for Tsinghua AIR's medical agent |
+| [**Weave**](#2-weave--a-multi-agent-travel-guide-consolidation-app) | Solo project | Multi-agent orchestration · in-house agent harness · map / weather / search tools · anti-hallucination checks | 48 unit tests, all passing · offline regression eval |
+| [**TIMO**](#3-timo--an-open-lightweight-model-for-medical-deep-research) | Engineering lead, Tsinghua AIR TIMO team | Medical deep research · event protocol · SSE live / offline replay · trajectory pipeline | 27B: 48.5% / 4B: 40.4% · 4B and 27B open-sourced |
 | [**Seamless**](#4-seamless--a-cloud-edge-road-crack-detection-system) | Team lead & algorithm developer | YOLO architecture customisation · cloud-edge split · on-vehicle inference | First-author conference paper · covered by 32 media outlets |
 | [**Lumie**](#5-lumie--a-live2d-ai-companion-app) | AI engineering & mobile, 2-person team | Knowledge-graph memory · graph-augmented retrieval · prompt governance & evaluation · Live2D | **[lumie.love](https://lumie.love)** |
 
@@ -100,63 +100,89 @@ This is the part I most want to show.
 
 ---
 
-## 2. Weave — an AI travel-guide consolidation app
+## 2. Weave — a multi-agent travel-guide consolidation app
 
-**Sep 2026 – present | Solo project, designed and built independently (AI-assisted coding)**
+**Sep 2026 – present | Solo project, designed and built independently**
 
-Weave is for independent travellers who screenshot dozens of guides on Xiaohongshu and Dianping, then can't use them on the ground. You drop the screenshots into a trip; a multimodal model reads out the suggestions; a four-layer consolidation engine de-duplicates them, normalises place names and surfaces conflicts; and the result is attached to an AI-generated itinerary skeleton that keeps improving as you feed it. The guiding idea: consolidation matters more than generation. Built with TypeScript + Expo / React Native (one codebase for iOS and web), Expo API Routes on the server, and a model layer that switches between Claude and Qwen.
+### ① Product and what makes it different
+
+People screenshot dozens of guides on Xiaohongshu and then can't use them on the ground: the tips repeat, contradict each other, spell place names five different ways, and mix in outdated information and ads. In Weave you drop those screenshots into a trip; the system reads them, de-duplicates, flags conflicts and attaches everything to an AI-generated itinerary skeleton that keeps improving as you feed it.
+
+The defining rule is **"the model may quote, not invent"**: every tip traces back to a screenshot or web source, and the details models most like to make up — exact times, ticket prices — can only come from the source text or a live lookup. Built with TypeScript + Expo / React Native (one codebase for iOS and web), with Claude and Qwen (including vision models) routed per task.
 
 ![Weave screens: trips, to-do, itinerary, inbox](images/weave-screens.jpg)
 
-### ① A four-layer consolidation engine
+### ② Multi-agent system
 
-Every layer is a pure function — same input, same output:
+An orchestrator and five specialist agents share the work:
 
-- **L0 duplicates**: byte fingerprints catch identical screenshots; text similarity ≥ 0.9 catches the same post captured twice
-- **L1 place names**: "better to miss a merge than make a wrong one" — exact/alias, similarity ≥ 0.9, and a 0.7–0.9 band the user confirms; chains are split into brand + branch so two branches never collapse into one
-- **L2 semantic de-dup**: text recall, auto-merge above 0.85, an LLM judge for the grey zone, and a fallback to text similarity when the model is unavailable
-- **L3 conflicts**: first check whether two tips apply under mutually exclusive conditions (six dimensions: time of day, season, companions, transport and more), then give a weighted, explainable leaning (condition fit, number of sources, recency, specificity, with a penalty for likely ads)
+| Agent | Responsibility |
+|---|---|
+| **Orchestrator** | Works out whether the input is new screenshots, a one-line note or a change request such as "make day three easier"; splits it into sub-tasks, dispatches them in dependency order and assembles a proposal for the user |
+| **Reader** | Uses a vision model to extract tips from screenshots, each with its source text; long screenshots are read in segments |
+| **Places** | Normalises place names: exact/alias, similarity ≥ 0.9, and a 0.7–0.9 band the user confirms; chains are split into brand + branch — better to miss a merge than make a wrong one |
+| **Consolidator** | Semantic de-dup (auto-merge above 0.85, LLM judge for the grey zone) and conflict detection across six applicability dimensions with a weighted, explainable leaning |
+| **Itinerary** | Generates the itinerary skeleton and turns natural-language edits into structured change proposals |
+| **Verifier** | Final gate: drops anything whose source coverage is below 0.8, allows numbers only from the source, and blocks schema-forbidden fields |
 
-### ② Stopping hallucination at the source
+A full run: screenshots → reader agents in parallel → places → consolidator against the existing itinerary → verifier → the orchestrator reports "N new, M mergeable, K conflicting", and **nothing is written until the user taps "Use"**. The model suggests; the user decides.
 
-Invented opening hours and ticket prices are the worst failure in a travel app, so the model may only quote, not improvise:
+### ③ Agent harness
 
-- every extracted tip must carry its source text; if under 80% of that source appears in the screenshot's text, the tip is dropped, and numbers may only come from the source
-- the itinerary schema simply has no fields for exact times, restaurants or prices, and deterministic rules catch anything that leaks into free text
-- a vendor-neutral LLM layer runs Claude and Qwen through the same loop: structured output → zod validation plus rule checks → feed the failure reasons back and retry, with code-level repairs for small issues to save a call
+A language model only reads and writes text; the harness is the runtime around it that offers tools, executes the calls the model makes and feeds the results back until it answers. Weave's harness is built in-house:
 
-### ③ Engineering
+- **Tool registry**: map / POI lookup, weather and web search, plus internal tools for reading screenshots, matching places, merge judging and itinerary reads/writes, all with zod-defined inputs and outputs; agents can only call registered tools, arguments are validated first, and external APIs get timeouts, caching and rate limits
+- **Execution loop with budgets**: each agent has step, token and time limits and wraps up with what it has when it runs out
+- **Structured output and feedback retries**: output goes through zod and deterministic rule checks; failures are fed back with their reasons, and small issues are repaired in code to save a call
+- **Fallback**: if any agent or tool fails, the flow falls back to the rule-based path (for example text-similarity merging) and keeps going
+- **Model routing**: vision models for reading, text models for judging and proposals; Claude and Qwen switch per task
+- **End-to-end tracing**: every step records the agent, tool, prompt version, model, latency and tokens, so any run can be replayed
 
-- Domain logic is decoupled from the UI (about 4,700 lines of pure TypeScript) and covered by **48 vitest unit tests**, all passing
-- Steps 0–5 of the roadmap shipped in five weeks — about 17,000 lines of TypeScript plus four design documents (about 1,300 lines) recording the thresholds and trade-offs
+### ④ Engineering
 
-> **In short**: Weave is less about making the model say more and more about making every sentence traceable to a source.
+- Domain logic is decoupled from the UI as pure functions, covered by **48 unit tests, all passing**
+- **Offline regression evaluation** on a fixed sample set: after changing a prompt or model, re-run and compare de-dup, conflict detection and source coverage
+- About 17,000 lines of TypeScript and four design documents recording every threshold and trade-off
+
+> **In short**: Weave is less about making the model say more and more about making every sentence traceable. The agents split the work cleanly; the harness keeps every model call controlled, recoverable and replayable.
 
 ---
 
-## 3. TIMO — a showcase platform for a medical deep-research agent
+## 3. TIMO — an open, lightweight model for medical deep research
 
 **TIMO project team, Institute for AI Industry Research (AIR), Tsinghua University | Engineering lead | Ongoing involvement**
 
-TIMO (TIMO-OSS-Search-Preview) is the Tsinghua AIR team's open, lightweight model for medical deep research, released in 4B and 27B sizes for private deployment. On 1,034 hard questions from six medical benchmarks, the 27B model scores 48.5% overall and the 4B model 40.4%. Given a medical question, the model loops through think → search → read → think again and answers with evidence. The team has an algorithm group, which trained the model and wrote the paper, and an engineering group, which I lead. My group built the platform that makes this process visible — step-by-step replay and live streaming — for the academic talk at the Beihai forum, the model's open-source release and later public demos.
+### ① What the project is
+
+Uneven computing resources and strict data-privacy rules make it hard to deploy large models in hospitals. TIMO (TIMO-OSS-Search-Preview), developed at Tsinghua AIR, aims to give **privately deployable lightweight models** real medical deep-research ability. Given a complex medical question, it works like a researcher — think → search → read guidelines and papers → reason again — and returns a verifiable, evidence-based answer.
+
+The project has three strands: evidence-driven training-data synthesis (knowledge-graph question generation, distillation of complex-question trajectories, multi-stage rejection sampling), co-evolution of the model with its retrieval harness, and a showcase platform for academic talks and the open-source release. The model ships in 4B and 27B sizes.
 
 ![TIMO live research view: conversation, research process, source library](images/timo-live.png)
 
-### ① One event protocol, two data sources
+### ② What the engineering group does, and what I do
 
-Replay (offline trajectories) and live mode (SSE) would normally need two UIs. I designed a shared event-stream protocol, documented it (377 lines) and set compatibility rules: add fields, never rename; bump the schema version for breaking changes. Both modes then ran on the same React front end without UI changes, and a teammate could build the live back end in parallel.
+The team has an algorithm group (data synthesis, training, the paper) and an engineering group, which turns the model's research ability into **systems that can be demonstrated and delivered**: the demo platform, the trajectory data pipeline and the hook-up to live inference, kept in step with every new model and harness version.
 
-### ② Trajectory pipeline
+I lead the engineering group — architecture, task split, code review and liaison with the algorithm group. Specifically:
 
-A Python pipeline converts raw agent trajectories for **1,034 medical benchmark questions across six benchmarks** into front-end events. Along the way I found that when the model opened several pages at once they were being treated as a single URL (2,417 calls affected) and fixed it. I also used the NCBI and OpenAlex APIs to fill in journal, citation count and DOI for cited papers, rate-limited to 10 requests per second.
-
-### ③ Replay engine and source library
+- **One event protocol, two data sources**: replay (offline trajectories) and live mode (SSE) would normally need two UIs. I designed and documented a shared event-stream protocol with compatibility rules (add fields, never rename; bump the schema version for breaking changes), so both modes run on the same React front end and the live back end could be built in parallel.
+- **Trajectory pipeline**: a Python pipeline converts raw agent trajectories for 1,034 questions across six medical benchmarks into front-end events. I found and fixed a bug where opening several pages at once was treated as one URL (2,417 calls affected), and used the NCBI and OpenAlex APIs to fill in journal, citation count and DOI, rate-limited to 10 requests per second.
+- **Replay engine and source library**: 1–8× speed, jump by round, typewriter effect, compact and real-time pacing, shortcuts and deep links; a searchable source library; a bilingual UI. During integration I traced a failure in English mode to the model's safety filter misclassifying medical drug content, where one failed translation took down the whole page.
+- The group merged 17 PRs; I wrote about 4,500 lines myself.
 
 ![Source library: papers collected and read during research](images/timo-library.jpg)
 
-I built the replay engine (1–8× speed, jump by round, typewriter effect, compact and real-time pacing, shortcuts and deep links), a searchable source-library modal linked from the research steps, and a bilingual Chinese/English UI. During integration I traced a failure in English mode to the model's safety filter misclassifying medical drug content, where a single failed translation took down the whole page.
+### ③ Results
 
-> **In short**: as engineering lead I set the interfaces, split the work and reviewed code, merged 17 PRs, and wrote about 4,500 lines myself. Doing engineering inside a research team means keeping pace with the model: every new model or harness version has to drop straight into the showcase.
+- **Accuracy**: on 1,034 hard questions from six medical benchmarks, TIMO (27B) scores **48.5%** overall, ahead of closed-book Claude-Opus-5 (42.9%); TIMO (4B) scores **40.4%**, ahead of closed-book GPT-6-astra (36.1%), and both lead comparable open medical models
+- **Co-evolution**: iterating the harness together with the model added 4.55 percentage points overall
+- **Data**: about 3,500 high-quality training trajectories selected from more than 220,000 candidate questions
+- **Release**: presented as an oral talk and poster at the Beihai forum; the 4B and 27B models are open-sourced on GitHub and Hugging Face, with the engineering group's platform used for the live demo and release
+
+> Model training and the paper are the algorithm group's work, and the accuracy figures are team results. This page shows interface screenshots only — no code or benchmark questions.
+
+> **In short**: doing engineering inside a research team means keeping pace with the model: every new model or harness version has to drop straight into the showcase.
 
 ---
 
