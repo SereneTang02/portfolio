@@ -18,6 +18,7 @@ MTech in Artificial Intelligence Systems candidate at the National University of
 | [**Weave**](#2-weave--an-ai-travel-guide-consolidation-app) | Solo project | Multimodal screenshot extraction · four-layer consolidation · anti-hallucination constraints · model switching | 48 unit tests, all passing |
 | [**TIMO**](#3-timo--a-showcase-platform-for-a-medical-deep-research-agent) | Group lead (4 people) | Event protocol · SSE live / offline replay · 1,034-question trajectory pipeline | Showcase for Tsinghua AIR's medical agent |
 | [**Seamless**](#4-seamless--a-cloud-edge-road-crack-detection-system) | Team lead & algorithm developer | YOLO architecture customisation · cloud-edge split · on-vehicle inference | First-author conference paper · covered by 32 media outlets |
+| [**Lumie**](#5-lumie--a-live2d-ai-companion-app) | AI engineering & mobile, 2-person team | Knowledge-graph memory · graph-augmented retrieval · prompt governance & evaluation · Live2D | **[lumie.love](https://lumie.love)** |
 
 ---
 
@@ -189,6 +190,55 @@ I led a 30-person cross-functional team through deployment and commercialisation
 ![Completion certificates and partnership agreements](images/road-certificates.jpg)
 
 > **In short**: this is the project I spent the longest on, from my second undergraduate year through to graduation. Technically it was the first time I went inside a deep learning model rather than calling an API — changing the architecture, swapping the loss function, running ablations against the metrics round after round. It left me with a habit: whenever someone claims an "AI capability", I ask first what distribution it was measured on and where its boundaries are. Beyond the technical side, taking a lab prototype through to enterprise pilots with a 30-person team taught me how much unglamorous but necessary work sits between "it runs" and "it is usable".
+
+---
+
+## 5. Lumie — a Live2D AI companion app
+
+**Apr 2026 – present ｜ AI engineering & mobile development, 2-person team**
+
+> **Try it at [lumie.love](https://lumie.love).**
+
+A mobile AI product for the emotional-companionship market: a Live2D avatar whose expressions track the conversation in real time, end-to-end realtime voice through Volcengine, and a long-term memory system that sustains a continuous relationship across days and topics. Built on a decoupled dual-repository architecture (mobile: Vue 3 + Vite + Capacitor + Live2D; server: Hono + Postgres + Neo4j + admin console), with the team collaborating through a multi-branch PR workflow.
+
+### ① The Live2D character and conversation
+
+Appearance, expression and lip-sync follow the emotion of the conversation in real time, with multiple characters and scene backgrounds. I own the last mile from model output to interface — stripping internal control markers out of replies, mapping emotion words onto the avatar's live expressions, and rendering answers word by word as they stream.
+
+![Live2D conversation](images/lumie-chat.jpg)
+
+### ② Long-term memory: a knowledge graph with graph-augmented retrieval
+
+Pure vector retrieval cannot reach three things: multi-hop association ("that friend of hers who's always working late"), contradiction resolution (loved cats three months ago, scratched and afraid of them last week), and temporal anchoring ("a year ago today you'd just defended your thesis"). I designed and built the Neo4j-backed memory graph and its retrieval pipeline:
+
+- **Extraction** — a regex pre-classifier first decides whether a turn is worth extracting at all; on a hit, an LLM structured-extraction step distils open-domain conversation into person / event / preference / emotion triples, merged idempotently into the graph
+- **Storage** — the vector index is built directly on the graph nodes, so embeddings and relationships share one store and cannot drift apart
+- **Retrieval** — entities are extracted from the incoming turn, then recall runs down two parallel paths, multi-hop graph neighbourhood and vector similarity, fused by a ranking over similarity, importance, time decay and hop distance before assembly into the memory injection block
+- **Contradiction resolution** — when a new fact conflicts with an old one, a `SUPERSEDES` edge is created rather than an overwrite: the current answer uses the latest state, but "you used to love cats" stays in the graph as relationship depth
+
+### ③ Making memory legible
+
+I led the product rework of the memory module: what the backend stores as scattered rows was reorganised along a *how you see her / how she sees you* split into a four-part narrative, so the user opens a growing relationship rather than a database listing.
+
+![Memory page](images/lumie-memory.jpg)
+
+### ④ Prompt governance and offline evaluation
+
+I consolidated the product's entire LLM prompting layer — strings hard-coded across 12+ backend services — into a database-backed registry of **21 typed slots** (persona, dialogue style, streaming and JSON output contracts, memory extraction and injection, Cypher generation, proactive openers, realtime-voice style), each editable live from the admin console, with variable interpolation, per-slot declared variables, and a shipped-in-code default that every slot degrades to. A broken or emptied edit falls back to the original prompt instead of injecting a blank system message. Prompt iteration went from a code change plus redeploy down to a console edit.
+
+![Editing prompts from the admin console](images/lumie-prompts.jpg)
+
+On top of that I built a ~750-line **offline evaluation harness** that turns prompt writing from taste into comparison. One script generates several stylistic candidates per slot; the other fills each candidate from a shared fixture library of realistic inputs and **actually runs it**, in two modes — *generative*, where the filled prompt is the request and the model's output is the artefact, and *behavioural*, where the candidate is injected as the system prompt and then probed with scripted user turns (a pushback, a distress message, a memory-worthy aside). Each slot carries its own temperature and token budget, the live production prompt is run on the identical input as a control, and everything lands in one side-by-side report that decides what ships.
+
+### ⑤ Emotional features and progression
+
+Mood logging, relationship milestones, a store and a wallet — the pieces that give companionship a sense of growth.
+
+![Mood, milestones and store](images/lumie-features.jpg)
+
+![Lumie repository contributions and PRs](images/lumie-contributions.jpg)
+
+> **In short**: Lumie stands for a different capability — delivering continuously inside a real team codebase spanning multiple repositories and a multi-branch PR workflow. Cross-repository interface contracts, keeping mobile and server consistent, closing the loop on prompt iteration: none of these problems exist in a one-person, one-repository project.
 
 ---
 
