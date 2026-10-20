@@ -175,7 +175,7 @@ I lead the engineering group — architecture, task split, code review and liais
 
 ### ③ Results
 
-Reached 48.5% (27B) and 40.4% (4B) overall accuracy on 1,034 hard questions from six medical benchmarks, ahead of closed-book Claude-Opus-5 (42.9%) and GPT-6-astra (36.1%) respectively and of comparable open medical models; gained 4.55 percentage points over the first version by co-evolving the harness with the model; selected about 3,500 high-quality training trajectories from more than 220,000 candidate questions; presented the work as an oral talk and poster at the Beihai forum, open-sourced the 4B and 27B models on GitHub and Hugging Face, and delivered the showcase platform for the live demo and release.
+Reached 48.5% (27B) and 40.4% (4B) overall accuracy on 1,034 hard questions from six medical benchmarks, ahead of closed-book Claude-Opus-5 (42.9%) and GPT-6-astra (36.1%) respectively and of comparable open medical models; gained 4.55 percentage points over the first version by co-evolving the harness with the model; selected about 3,500 high-quality training trajectories from more than 220,000 candidate questions; presented the work as an oral talk and poster at the 2nd Beijing-Tsinghua Health AI Summit (2026), took part in CCL 2026 (the 25th China National Conference on Computational Linguistics), open-sourced the 4B and 27B models on GitHub and Hugging Face, and delivered the showcase platform for the live demo and release.
 
 > Model training and the paper are the algorithm group's work, and the accuracy figures are team results. This page shows interface screenshots only — no code or benchmark questions.
 
