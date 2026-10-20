@@ -156,7 +156,7 @@ A Python pipeline converts raw agent trajectories for **1,034 medical benchmark 
 
 I built the replay engine (1–8× speed, jump by round, typewriter effect, compact and real-time pacing, shortcuts and deep links), a searchable source-library modal linked from the research steps, and a bilingual Chinese/English UI. During integration I traced a failure in English mode to the model's safety filter misclassifying medical drug content, where a single failed translation took down the whole page.
 
-> **In short**: as engineering lead I set the interfaces, split the work and reviewed code, merged 17 PRs, wrote about 4,500 lines myself, and generated the presentation video programmatically with Remotion. Doing engineering inside a research team means keeping pace with the model: every new model or harness version has to drop straight into the showcase.
+> **In short**: as engineering lead I set the interfaces, split the work and reviewed code, merged 17 PRs, and wrote about 4,500 lines myself. Doing engineering inside a research team means keeping pace with the model: every new model or harness version has to drop straight into the showcase.
 
 ---
 
